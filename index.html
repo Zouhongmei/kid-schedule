@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>小课表 🎨</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6366f1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+:root {
+  --primary: #6366f1;
+  --primary-light: #a5b4fc;
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #1e293b;
+  --text2: #64748b;
+  --border: #e2e8f0;
+  --radius: 14px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+  padding-top: var(--safe-top);
+  padding-bottom: calc(64px + var(--safe-bottom));
+  overflow-x: hidden;
+}
+
+/* ===== Top Bar ===== */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #fff;
+  padding: 16px 20px 14px;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+}
+.topbar h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
+.topbar-sub { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+
+/* ===== Tab Navigation ===== */
+.tabs {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: var(--card);
+  display: flex;
+  border-top: 1px solid var(--border);
+  padding-bottom: var(--safe-bottom);
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+}
+.tab-btn {
+  flex: 1; border: none; background: none; padding: 8px 0 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  color: var(--text2); font-size: 10px; cursor: pointer;
+  transition: color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab-btn.active { color: var(--primary); }
+.tab-btn .icon { font-size: 20px; line-height: 1; }
+
+/* ===== Pages ===== */
+.page { display: none; padding: 16px 16px 20px; }
+.page.active { display: block; animation: fadeIn 0.2s; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ===== Section ===== */
+.section-title {
+  font-size: 15px; font-weight: 600; color: var(--text2);
+  margin: 18px 0 10px; display: flex; align-items: center; gap: 6px;
+}
+.section-title:first-child { margin-top: 0; }
+
+/* ===== Cards ===== */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.2s;
+}
+.card:active { box-shadow: var(--shadow-md); }
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.card-header h3 { font-size: 16px; font-weight: 600; }
+.color-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  display: inline-block; margin-right: 8px; vertical-align: middle;
+}
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 20px; border-radius: 10px; border: none;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all 0.15s; -webkit-tap-highlight-color: transparent;
+}
+.btn-primary {
+  background: var(--primary); color: #fff;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+}
+.btn-primary:active { transform: scale(0.97); }
+.btn-sm { padding: 6px 14px; font-size: 13px; border-radius: 8px; }
+.btn-outline {
+  background: transparent; color: var(--primary);
+  border: 1.5px solid var(--primary-light);
+}
+.btn-danger { background: #fee2e2; color: #dc2626; }
+.btn-success { background: #dcfce7; color: #16a34a; }
+.btn-block { width: 100%; }
+
+/* ===== Course List ===== */
+.course-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px; background: var(--card); border-radius: var(--radius);
+  margin-bottom: 8px; box-shadow: var(--shadow); cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.course-item:active { box-shadow: var(--shadow-md); }
+.course-color {
+  width: 42px; height: 42px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.course-info { flex: 1; min-width: 0; }
+.course-name { font-size: 15px; font-weight: 600; }
+.course-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+/* ===== Week Schedule Grid ===== */
+.schedule-header {
+  display: grid; grid-template-columns: 56px repeat(7, 1fr);
+  gap: 2px; text-align: center; font-size: 12px; font-weight: 600;
+  color: var(--text2); margin-bottom: 6px;
+  position: sticky; top: 0; background: var(--bg); z-index: 10;
+  padding: 8px 0 4px;
+}
+.schedule-header .today { color: var(--primary); }
+.schedule-grid {
+  display: grid; grid-template-columns: 56px repeat(7, 1fr);
+  gap: 2px; min-height: 200px;
+}
+.time-label {
+  font-size: 11px; color: var(--text2); text-align: right;
+  padding-right: 6px; padding-top: 4px; line-height: 1.2;
+}
+.schedule-cell {
+  min-height: 44px; border-radius: 6px; padding: 3px;
+  font-size: 0; position: relative;
+}
+.schedule-cell.has-class {
+  font-size: 11px; padding: 4px;
+  color: #fff; font-weight: 600; line-height: 1.3;
+  overflow: hidden; cursor: pointer;
+}
+.schedule-cell.has-class:active { opacity: 0.8; }
+.schedule-cell.inactive-slot {
+  font-size: 11px; padding: 4px;
+  font-weight: 600; line-height: 1.3;
+  overflow: hidden; cursor: default;
+  background: transparent !important;
+  border: 2px dashed; opacity: 0.55;
+}
+.class-name { font-size: 11px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.class-time { font-size: 9px; opacity: 0.85; display: block; }
+.inactive-slot .class-name { color: var(--text2); }
+.inactive-slot .class-time { color: var(--text2); }
+
+/* ===== Progress ===== */
+.progress-wrap { margin-top: 8px; }
+.progress-bar {
+  height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 4px; transition: width 0.5s ease;
+}
+.progress-text {
+  display: flex; justify-content: space-between;
+  font-size: 12px; color: var(--text2); margin-top: 4px;
+}
+
+/* ===== Check-in History ===== */
+.checkin-list { margin-top: 10px; }
+.checkin-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.checkin-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.checkin-date { flex: 1; color: var(--text2); }
+.checkin-del {
+  color: #dc2626; font-size: 12px; cursor: pointer; padding: 4px;
+}
+
+/* ===== Modal ===== */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.4);
+  display: none; align-items: flex-end; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--card);
+  border-radius: 20px 20px 0 0;
+  width: 100%; max-width: 480px;
+  max-height: 88vh; overflow-y: auto;
+  padding: 20px 20px calc(20px + var(--safe-bottom));
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.modal-handle {
+  width: 36px; height: 4px; background: #cbd5e1; border-radius: 2px;
+  margin: 0 auto 16px;
+}
+.modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+
+/* ===== Form ===== */
+.form-group { margin-bottom: 14px; }
+.form-group label {
+  display: block; font-size: 13px; font-weight: 600;
+  color: var(--text2); margin-bottom: 6px;
+}
+.form-input {
+  width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+  border-radius: 10px; font-size: 15px; background: var(--bg);
+  transition: border-color 0.2s;
+}
+.form-input:focus { outline: none; border-color: var(--primary); }
+
+.day-picker { display: flex; gap: 6px; flex-wrap: wrap; }
+.day-btn {
+  width: 40px; height: 40px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--bg);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.day-btn.active {
+  background: var(--primary); color: #fff; border-color: var(--primary);
+}
+
+.color-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+.color-opt {
+  width: 32px; height: 32px; border-radius: 10px; cursor: pointer;
+  border: 3px solid transparent; transition: all 0.15s;
+}
+.color-opt.active { border-color: var(--text); transform: scale(1.1); }
+
+/* ===== Schedule Entry Row ===== */
+.sched-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.sched-row:last-child { border-bottom: none; }
+
+.sched-day-select {
+  flex-shrink: 0; width: 64px; height: 38px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  background: var(--bg); font-size: 14px; font-weight: 600;
+  padding: 0 4px; text-align: center; color: var(--text);
+  -webkit-appearance: none; appearance: none;
+}
+.sched-day-select:focus { outline: none; border-color: var(--primary); }
+
+.sched-time-input {
+  flex: 1; min-width: 0; height: 38px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  background: var(--bg); font-size: 14px; font-weight: 500;
+  padding: 0 6px; text-align: center; color: var(--text);
+  -webkit-appearance: none; appearance: none;
+}
+.sched-time-input:focus { outline: none; border-color: var(--primary); }
+
+.sched-row .dash {
+  font-size: 16px; font-weight: 700; color: var(--text2);
+  flex-shrink: 0; width: 16px; text-align: center;
+}
+
+/* Toggle switch for active/inactive */
+.toggle-wrap {
+  flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.toggle-switch {
+  width: 38px; height: 22px; border-radius: 11px;
+  background: #cbd5e1; position: relative; cursor: pointer;
+  transition: background 0.2s; flex-shrink: 0;
+}
+.toggle-switch.on { background: #22c55e; }
+.toggle-switch::after {
+  content: ''; position: absolute;
+  top: 2px; left: 2px; width: 18px; height: 18px;
+  border-radius: 50%; background: #fff;
+  transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.toggle-switch.on::after { left: 18px; }
+.toggle-label {
+  font-size: 9px; font-weight: 600; color: var(--text2);
+  white-space: nowrap;
+}
+
+.sched-del {
+  width: 30px; height: 30px; border-radius: 8px;
+  border: none; background: #fee2e2; color: #dc2626;
+  font-size: 15px; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.sched-del:active { opacity: 0.6; }
+
+.add-sched-btn {
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  width: 100%; padding: 10px; border-radius: 10px;
+  border: 1.5px dashed var(--primary-light); background: transparent;
+  color: var(--primary); font-size: 13px; font-weight: 600;
+  cursor: pointer; margin-top: 8px; transition: background 0.15s;
+}
+.add-sched-btn:active { background: var(--bg); }
+
+/* ===== Org Schedule Card ===== */
+.org-card {
+  background: var(--card); border-radius: var(--radius);
+  padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow);
+}
+.org-card-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+}
+.org-icon { font-size: 22px; }
+.org-name { font-size: 16px; font-weight: 700; flex: 1; }
+.org-badge-active {
+  font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 6px; background: #dcfce7; color: #16a34a;
+}
+.org-badge-inactive {
+  font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 6px; background: #f1f5f9; color: var(--text2);
+}
+.org-sched-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.org-sched-item:last-child { border-bottom: none; }
+.org-sched-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.org-sched-dot.inactive {
+  background: transparent !important; border: 2px solid var(--text2);
+  width: 8px; height: 8px; box-sizing: border-box;
+}
+.org-sched-time { font-weight: 600; flex: 1; }
+.org-sched-status {
+  font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 6px;
+}
+
+/* ===== Toast ===== */
+.toast {
+  position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+  background: #1e293b; color: #fff; padding: 10px 20px;
+  border-radius: 10px; font-size: 14px; font-weight: 500;
+  z-index: 300; opacity: 0; transition: opacity 0.3s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+/* ===== Empty State ===== */
+.empty {
+  text-align: center; padding: 40px 20px; color: var(--text2);
+}
+.empty .icon { font-size: 48px; margin-bottom: 12px; }
+.empty p { font-size: 14px; margin-bottom: 16px; }
+
+/* ===== Confirm Dialog ===== */
+.confirm-overlay {
+  position: fixed; inset: 0; z-index: 250;
+  background: rgba(0,0,0,0.4);
+  display: none; align-items: center; justify-content: center;
+}
+.confirm-overlay.show { display: flex; }
+.confirm-box {
+  background: var(--card); border-radius: 16px; padding: 24px;
+  width: 280px; text-align: center; box-shadow: var(--shadow-md);
+}
+.confirm-box h3 { font-size: 16px; margin-bottom: 8px; }
+.confirm-box p { font-size: 14px; color: var(--text2); margin-bottom: 18px; }
+.confirm-btns { display: flex; gap: 10px; justify-content: center; }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <h1>🎨 小课表</h1>
+  <div class="topbar-sub" id="topbarSub">孩子的兴趣班管家</div>
+</div>
+
+<!-- Page 1: Courses -->
+<div class="page active" id="pageCourses">
+  <div id="courseList"></div>
+  <div style="margin-top:12px;">
+    <button class="btn btn-primary btn-block" onclick="openAddCourse()">+ 添加兴趣班</button>
+  </div>
+</div>
+
+<!-- Page 2: My Schedule -->
+<div class="page" id="pageMySched">
+  <div class="schedule-header" id="mySchedHeader"></div>
+  <div class="schedule-grid" id="mySchedGrid"></div>
+  <div style="margin-top:16px; font-size:12px; color:var(--text2); text-align:center;">
+    点击有色块可快速打卡上课
+  </div>
+</div>
+
+<!-- Page 3: Org Schedule -->
+<div class="page" id="pageOrgSched">
+  <div id="orgSchedList"></div>
+</div>
+
+<!-- Page 4: Hours -->
+<div class="page" id="pageHours">
+  <div id="hoursList"></div>
+</div>
+
+<!-- Tab Navigation -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('pageCourses', this)">
+    <span class="icon">📚</span>兴趣班
+  </button>
+  <button class="tab-btn" onclick="switchTab('pageMySched', this)">
+    <span class="icon">📅</span>我的课表
+  </button>
+  <button class="tab-btn" onclick="switchTab('pageOrgSched', this)">
+    <span class="icon">🏫</span>机构课表
+  </button>
+  <button class="tab-btn" onclick="switchTab('pageHours', this)">
+    <span class="icon">📊</span>课时
+  </button>
+</div>
+
+<!-- Add/Edit Course Modal -->
+<div class="modal-overlay" id="modalCourse">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="modalTitle">添加兴趣班</h2>
+    <input type="hidden" id="editId">
+
+    <div class="form-group">
+      <label>兴趣班名称</label>
+      <input class="form-input" id="inputName" placeholder="如：画画课、舞蹈课" maxlength="20">
+    </div>
+    <div class="form-group">
+      <label>图标</label>
+      <div class="day-picker" id="iconPicker"></div>
+    </div>
+    <div class="form-group">
+      <label>颜色</label>
+      <div class="color-picker" id="colorPicker"></div>
+    </div>
+    <div class="form-group">
+      <label>总课时</label>
+      <input class="form-input" id="inputTotal" type="number" placeholder="如：48" min="1" max="999">
+    </div>
+
+    <div class="form-group">
+      <label>机构排课 <span style="font-weight:400;color:var(--text2)">（开关闭=仅机构有但我们不上）</span></label>
+      <div id="schedEntries"></div>
+      <button class="add-sched-btn" type="button" onclick="addSchedEntry()">+ 添加排课</button>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:18px;">
+      <button class="btn btn-outline" style="flex:1;" onclick="closeModal('modalCourse')">取消</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="saveCourse()">保存</button>
+    </div>
+    <button class="btn btn-danger btn-sm btn-block" style="margin-top:10px; display:none;" id="btnDelete" onclick="deleteCourse()">删除此兴趣班</button>
+  </div>
+</div>
+
+<!-- Check-in Modal -->
+<div class="modal-overlay" id="modalCheckin">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>✅ 打卡上课</h2>
+    <div id="checkinContent"></div>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="confirm-overlay" id="confirmDialog">
+  <div class="confirm-box">
+    <h3 id="confirmTitle">确认</h3>
+    <p id="confirmMsg"></p>
+    <div class="confirm-btns">
+      <button class="btn btn-outline btn-sm" onclick="closeConfirm(false)">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="closeConfirm(true)">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== Data Layer =====
+const STORAGE_KEY = 'kidScheduleData_v2';
+const ICONS = ['🎨','💃','🎹','🏊','⚽','🤸','🎤','🧮','✍️','🗣️','🔤','🎾','🎻','🥋','🎯','📐','🧘','🏋️'];
+const COLORS = [
+  '#6366f1','#8b5cf6','#ec4899','#f43f5e','#f97316',
+  '#eab308','#22c55e','#14b8a6','#06b6d4','#3b82f6',
+  '#64748b','#a3e635'
+];
+const DAY_NAMES = ['一','二','三','四','五','六','日'];
+
+function loadData() {
+  try {
+    let d = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (!d) {
+      // Try migrate from v1
+      const v1 = JSON.parse(localStorage.getItem('kidScheduleData'));
+      if (v1 && v1.courses) return migrateV1(v1);
+      return { courses: [], checkins: [] };
+    }
+    return d;
+  } catch { return { courses: [], checkins: [] }; }
+}
+
+function migrateV1(v1) {
+  const data = { courses: [], checkins: v1.checkins || [] };
+  v1.courses.forEach(c => {
+    const schedule = [];
+    (c.days || []).forEach(d => {
+      (c.times || []).forEach(t => {
+        schedule.push({ day: d, start: t, end: '', active: true });
+      });
+    });
+    data.courses.push({
+      id: c.id, name: c.name, icon: c.icon, color: c.color,
+      totalHours: c.totalHours, schedule
+    });
+  });
+  saveData(data);
+  localStorage.removeItem('kidScheduleData');
+  return data;
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+}
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ===== Tab Switching =====
+function switchTab(pageId, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  btn.classList.add('active');
+  if (pageId === 'pageMySched') renderMySchedule();
+  if (pageId === 'pageOrgSched') renderOrgSchedule();
+  if (pageId === 'pageHours') renderHours();
+  if (pageId === 'pageCourses') renderCourses();
+}
+
+// ===== Toast =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ===== Confirm Dialog =====
+let confirmResolve = null;
+function showConfirm(title, msg) {
+  return new Promise(resolve => {
+    confirmResolve = resolve;
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMsg').textContent = msg;
+    document.getElementById('confirmDialog').classList.add('show');
+  });
+}
+function closeConfirm(result) {
+  document.getElementById('confirmDialog').classList.remove('show');
+  if (confirmResolve) { confirmResolve(result); confirmResolve = null; }
+}
+
+// ===== Modal =====
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// ===== Format time range =====
+function fmtTimeRange(s) {
+  const day = '周' + DAY_NAMES[s.day];
+  if (s.end) return `${day} ${s.start}-${s.end}`;
+  return `${day} ${s.start}`;
+}
+
+// ===== Active schedule entries for a course =====
+function activeSched(course) {
+  return (course.schedule || []).filter(s => s.active);
+}
+function allSched(course) {
+  return course.schedule || [];
+}
+
+// ===== Courses Page =====
+function renderCourses() {
+  const data = loadData();
+  const wrap = document.getElementById('courseList');
+  const courses = data.courses;
+
+  if (courses.length === 0) {
+    wrap.innerHTML = `
+      <div class="empty">
+        <div class="icon">🎨</div>
+        <p>还没有兴趣班<br>点击下方按钮添加第一个</p>
+      </div>`;
+    document.getElementById('topbarSub').textContent = '孩子的兴趣班管家';
+    return;
+  }
+
+  const totalHours = courses.reduce((s, c) => s + c.totalHours, 0);
+  const usedHours = courses.reduce((s, c) => {
+    return s + data.checkins.filter(ci => ci.courseId === c.id).length;
+  }, 0);
+  document.getElementById('topbarSub').textContent = `${courses.length}个兴趣班 · 已上${usedHours}/${totalHours}课时`;
+
+  wrap.innerHTML = courses.map(c => {
+    const used = data.checkins.filter(ci => ci.courseId === c.id).length;
+    const remain = c.totalHours - used;
+    const pct = Math.min(100, (used / c.totalHours * 100)).toFixed(0);
+    const fill = remain <= 4 ? '#f43f5e' : c.color;
+    const activeList = activeSched(c);
+    const schedText = activeList.map(fmtTimeRange).join('、') || '无上课排课';
+    const inactiveCount = allSched(c).filter(s => !s.active).length;
+    const inactiveHint = inactiveCount > 0 ? ` · ${inactiveCount}个未选排课` : '';
+
+    return `
+    <div class="course-item" onclick="openEditCourse('${c.id}')">
+      <div class="course-color" style="background:${c.color}20; color:${c.color}">${c.icon}</div>
+      <div class="course-info">
+        <div class="course-name">${c.name}</div>
+        <div class="course-meta">${schedText}${inactiveHint}</div>
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${fill}"></div></div>
+          <div class="progress-text">
+            <span>已上 ${used} 节</span>
+            <span style="color:${remain<=4?'#f43f5e':'var(--text2)'}">剩余 ${remain} 节</span>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-success btn-sm" onclick="event.stopPropagation();quickCheckin('${c.id}')">打卡</button>
+    </div>`;
+  }).join('');
+}
+
+// ===== Add/Edit Course =====
+let selectedIcon = '🎨';
+let selectedColor = COLORS[0];
+let schedEntriesList = []; // [{day, start, end, active}]
+let schedEntryCounter = 0;
+let selectedDays = []; // kept for form logic compatibility but not used in course data
+
+function openAddCourse() {
+  document.getElementById('editId').value = '';
+  document.getElementById('modalTitle').textContent = '添加兴趣班';
+  document.getElementById('inputName').value = '';
+  document.getElementById('inputTotal').value = '';
+  selectedIcon = ICONS[0];
+  selectedColor = COLORS[0];
+  document.getElementById('btnDelete').style.display = 'none';
+  schedEntriesList = [];
+  schedEntryCounter = 0;
+  renderFormPickers();
+  renderSchedEntries();
+  // Add one default entry
+  addSchedEntry(1, '14:30', '16:00', true);
+  openModal('modalCourse');
+}
+
+function openEditCourse(id) {
+  const data = loadData();
+  const c = data.courses.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('editId').value = id;
+  document.getElementById('modalTitle').textContent = '编辑兴趣班';
+  document.getElementById('inputName').value = c.name;
+  document.getElementById('inputTotal').value = c.totalHours;
+  selectedIcon = c.icon;
+  selectedColor = c.color;
+  document.getElementById('btnDelete').style.display = 'block';
+  schedEntriesList = (c.schedule || []).map(s => ({...s}));
+  schedEntryCounter = schedEntriesList.length;
+  renderFormPickers();
+  renderSchedEntries();
+  openModal('modalCourse');
+}
+
+function renderFormPickers() {
+  // Icon picker
+  document.getElementById('iconPicker').innerHTML = ICONS.map(ic =>
+    `<button class="day-btn${selectedIcon===ic?' active':''}" onclick="selectIcon('${ic}')" style="font-size:18px">${ic}</button>`
+  ).join('');
+
+  // Color picker
+  document.getElementById('colorPicker').innerHTML = COLORS.map(c =>
+    `<div class="color-opt${selectedColor===c?' active':''}" style="background:${c}" onclick="selectColor('${c}')"></div>`
+  ).join('');
+}
+
+function selectIcon(ic) { selectedIcon = ic; renderFormPickers(); }
+function selectColor(c) { selectedColor = c; renderFormPickers(); }
+
+// ===== Schedule Entry Form =====
+function addSchedEntry(defDay, defStart, defEnd, defActive) {
+  const idx = schedEntryCounter++;
+  schedEntriesList.push({
+    day: defDay ?? 1,
+    start: defStart ?? '14:30',
+    end: defEnd ?? '',
+    active: defActive !== undefined ? defActive : true
+  });
+  renderSchedEntries();
+}
+
+function removeSchedEntry(idx) {
+  schedEntriesList = schedEntriesList.filter((_, i) => i !== idx);
+  if (schedEntriesList.length === 0) {
+    addSchedEntry(1, '14:30', '', true);
+    return;
+  }
+  renderSchedEntries();
+}
+
+function toggleSchedActive(idx) {
+  schedEntriesList[idx].active = !schedEntriesList[idx].active;
+  renderSchedEntries();
+}
+
+function updateSchedDay(idx, val) {
+  schedEntriesList[idx].day = parseInt(val);
+}
+
+function updateSchedStart(idx, val) {
+  schedEntriesList[idx].start = val;
+}
+
+function updateSchedEnd(idx, val) {
+  schedEntriesList[idx].end = val;
+}
+
+function renderSchedEntries() {
+  const wrap = document.getElementById('schedEntries');
+  wrap.innerHTML = schedEntriesList.map((s, i) => {
+    const dayOptions = DAY_NAMES.map((d, di) =>
+      `<option value="${di}"${s.day===di?' selected':''}>周${d}</option>`
+    ).join('');
+
+    return `
+    <div class="sched-row">
+      <select class="sched-day-select" onchange="updateSchedDay(${i}, this.value)">${dayOptions}</select>
+      <input type="time" class="sched-time-input" value="${s.start}" onchange="updateSchedStart(${i}, this.value)">
+      <span class="dash">—</span>
+      <input type="time" class="sched-time-input" value="${s.end}" onchange="updateSchedEnd(${i}, this.value)" placeholder="结束">
+      <div class="toggle-wrap">
+        <div class="toggle-switch${s.active?' on':''}" onclick="toggleSchedActive(${i})"></div>
+        <span class="toggle-label">${s.active?'上课':'不上'}</span>
+      </div>
+      <button class="sched-del" onclick="removeSchedEntry(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function saveCourse() {
+  const name = document.getElementById('inputName').value.trim();
+  const total = parseInt(document.getElementById('inputTotal').value);
+  const editId = document.getElementById('editId').value;
+
+  if (!name) { showToast('请输入兴趣班名称'); return; }
+  if (!total || total < 1) { showToast('请输入总课时'); return; }
+  if (schedEntriesList.length === 0) { showToast('请至少添加一条排课'); return; }
+
+  // Validate: every entry must have start time
+  const invalidEntry = schedEntriesList.find(s => !s.start);
+  if (invalidEntry) { showToast('请填写上课开始时间'); return; }
+
+  const data = loadData();
+
+  if (editId) {
+    const idx = data.courses.findIndex(c => c.id === editId);
+    if (idx >= 0) {
+      data.courses[idx] = { ...data.courses[idx], name, icon: selectedIcon, color: selectedColor, totalHours: total, schedule: schedEntriesList };
+    }
+  } else {
+    data.courses.push({
+      id: genId(), name, icon: selectedIcon, color: selectedColor,
+      totalHours: total, schedule: schedEntriesList
+    });
+  }
+
+  saveData(data);
+  closeModal('modalCourse');
+  renderCourses();
+  showToast(editId ? '已更新' : '已添加');
+}
+
+async function deleteCourse() {
+  const editId = document.getElementById('editId').value;
+  if (!editId) return;
+  const ok = await showConfirm('删除确认', '确定删除此兴趣班？所有打卡记录也会删除。');
+  if (!ok) return;
+  const data = loadData();
+  data.courses = data.courses.filter(c => c.id !== editId);
+  data.checkins = data.checkins.filter(ci => ci.courseId !== editId);
+  saveData(data);
+  closeModal('modalCourse');
+  renderCourses();
+  showToast('已删除');
+}
+
+// ===== Quick Check-in =====
+function quickCheckin(courseId) {
+  const data = loadData();
+  const course = data.courses.find(c => c.id === courseId);
+  if (!course) return;
+  const used = data.checkins.filter(ci => ci.courseId === courseId).length;
+  const remain = course.totalHours - used;
+
+  if (remain <= 0) {
+    showToast('课时已用完！');
+    return;
+  }
+
+  data.checkins.push({ id: genId(), courseId, date: todayStr(), time: new Date().toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'}) });
+  saveData(data);
+  const newRemain = remain - 1;
+  showToast(`${course.icon} ${course.name} 打卡成功！剩余${newRemain}节`);
+  renderCourses();
+}
+
+// ===== My Schedule Page (active only) =====
+function buildScheduleMap(data, activeOnly) {
+  const map = {};
+  const timeSet = new Set();
+  data.courses.forEach(c => {
+    const schedList = activeOnly ? activeSched(c) : allSched(c);
+    schedList.forEach(s => {
+      const key = s.start;
+      timeSet.add(key);
+      if (!map[s.day]) map[s.day] = {};
+      if (!map[s.day][key]) map[s.day][key] = [];
+      map[s.day][key].push({ course: c, sched: s, active: s.active });
+    });
+  });
+  const sortedTimes = [...timeSet].sort();
+  return { map, sortedTimes };
+}
+
+function renderScheduleGrid(headerEl, gridEl, data, activeOnly) {
+  const today = new Date();
+  const todayDay = (today.getDay() + 6) % 7;
+
+  // Header
+  headerEl.innerHTML = `<div></div>` + DAY_NAMES.map((d, i) =>
+    `<div class="${i===todayDay?'today':''}">${d}</div>`
+  ).join('');
+
+  const { map, sortedTimes } = buildScheduleMap(data, activeOnly);
+
+  if (sortedTimes.length === 0) {
+    gridEl.innerHTML = `
+      <div style="grid-column:1/-1;" class="empty">
+        <div class="icon">${activeOnly ? '📅' : '🏫'}</div>
+        <p>${activeOnly ? '添加兴趣班后这里会显示你的课表' : '机构排课汇总会在这里显示'}</p>
+      </div>`;
+    return;
+  }
+
+  let html = '';
+  sortedTimes.forEach(time => {
+    html += `<div class="time-label">${time}</div>`;
+    for (let day = 0; day < 7; day++) {
+      const entries = map[day] && map[day][time];
+      if (entries && entries.length > 0) {
+        const e = entries[0]; // take first if overlap
+        const c = e.course;
+        const s = e.sched;
+        if (activeOnly || e.active) {
+          const timeStr = s.end ? `${s.start}-${s.end}` : s.start;
+          html += `<div class="schedule-cell has-class" style="background:${c.color}" onclick="quickCheckin('${c.id}')">
+            <span class="class-name">${c.icon} ${c.name}</span>
+            <span class="class-time">${timeStr}</span>
+          </div>`;
+        } else {
+          // Inactive slot (only shown in org view)
+          const timeStr = s.end ? `${s.start}-${s.end}` : s.start;
+          html += `<div class="schedule-cell inactive-slot" style="border-color:${c.color}">
+            <span class="class-name">${c.icon} ${c.name}</span>
+            <span class="class-time">${timeStr}</span>
+          </div>`;
+        }
+      } else {
+        html += `<div class="schedule-cell"></div>`;
+      }
+    }
+  });
+  gridEl.innerHTML = html;
+}
+
+function renderMySchedule() {
+  const data = loadData();
+  renderScheduleGrid(
+    document.getElementById('mySchedHeader'),
+    document.getElementById('mySchedGrid'),
+    data, true
+  );
+}
+
+// ===== Org Schedule Page (all slots) =====
+function renderOrgSchedule() {
+  const data = loadData();
+  const wrap = document.getElementById('orgSchedList');
+
+  if (data.courses.length === 0) {
+    wrap.innerHTML = `
+      <div class="empty">
+        <div class="icon">🏫</div>
+        <p>添加兴趣班后这里会显示机构排课汇总</p>
+      </div>`;
+    return;
+  }
+
+  wrap.innerHTML = data.courses.map(c => {
+    const schedAll = allSched(c).sort((a, b) => a.day !== b.day ? a.day - b.day : a.start.localeCompare(b.start));
+    const activeCount = schedAll.filter(s => s.active).length;
+    const inactiveCount = schedAll.length - activeCount;
+
+    return `
+    <div class="org-card">
+      <div class="org-card-header">
+        <span class="org-icon" style="color:${c.color}">${c.icon}</span>
+        <span class="org-name">${c.name}</span>
+        ${activeCount > 0 ? `<span class="org-badge-active">上课 ${activeCount}</span>` : ''}
+        ${inactiveCount > 0 ? `<span class="org-badge-inactive">未选 ${inactiveCount}</span>` : ''}
+      </div>
+      ${schedAll.map(s => {
+        const timeStr = s.end ? `${s.start}-${s.end}` : s.start;
+        const dayStr = '周' + DAY_NAMES[s.day];
+        return `
+        <div class="org-sched-item">
+          <div class="org-sched-dot${s.active ? '' : ' inactive'}" style="background:${c.color}"></div>
+          <div class="org-sched-time">${dayStr} ${timeStr}</div>
+          <div class="org-sched-status" style="background:${s.active ? '#dcfce7' : '#f1f5f9'};color:${s.active ? '#16a34a' : 'var(--text2)'}">
+            ${s.active ? '✓ 上课' : '不上'}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+
+  // Also render the combined grid below the cards
+  const gridSection = document.createElement('div');
+  gridSection.innerHTML = `<div class="section-title">汇总周课表</div>
+    <div class="schedule-header" id="orgSchedHeader"></div>
+    <div class="schedule-grid" id="orgSchedGrid"></div>
+    <div style="margin-top:12px; font-size:12px; color:var(--text2); text-align:center;">
+      实色块 = 上课 &nbsp;|&nbsp; 虚线块 = 机构有排课但不上
+    </div>`;
+  wrap.appendChild(gridSection);
+
+  // Render grid with all slots
+  const headerEl = document.getElementById('orgSchedHeader');
+  const gridEl = document.getElementById('orgSchedGrid');
+  renderOrgGrid(headerEl, gridEl, data);
+}
+
+function renderOrgGrid(headerEl, gridEl, data) {
+  const today = new Date();
+  const todayDay = (today.getDay() + 6) % 7;
+
+  headerEl.innerHTML = `<div></div>` + DAY_NAMES.map((d, i) =>
+    `<div class="${i===todayDay?'today':''}">${d}</div>`
+  ).join('');
+
+  const { map, sortedTimes } = buildScheduleMap(data, false);
+
+  if (sortedTimes.length === 0) {
+    gridEl.innerHTML = `<div style="grid-column:1/-1;" class="empty"><p>暂无排课</p></div>`;
+    return;
+  }
+
+  let html = '';
+  sortedTimes.forEach(time => {
+    html += `<div class="time-label">${time}</div>`;
+    for (let day = 0; day < 7; day++) {
+      const entries = map[day] && map[day][time];
+      if (entries && entries.length > 0) {
+        const e = entries[0];
+        const c = e.course;
+        const s = e.sched;
+        const timeStr = s.end ? `${s.start}-${s.end}` : s.start;
+        if (e.active) {
+          html += `<div class="schedule-cell has-class" style="background:${c.color}" onclick="quickCheckin('${c.id}')">
+            <span class="class-name">${c.icon} ${c.name}</span>
+            <span class="class-time">${timeStr}</span>
+          </div>`;
+        } else {
+          html += `<div class="schedule-cell inactive-slot" style="border-color:${c.color}">
+            <span class="class-name">${c.icon} ${c.name}</span>
+            <span class="class-time">${timeStr}</span>
+          </div>`;
+        }
+      } else {
+        html += `<div class="schedule-cell"></div>`;
+      }
+    }
+  });
+  gridEl.innerHTML = html;
+}
+
+// ===== Hours Page =====
+function renderHours() {
+  const data = loadData();
+  const wrap = document.getElementById('hoursList');
+
+  if (data.courses.length === 0) {
+    wrap.innerHTML = `
+      <div class="empty">
+        <div class="icon">📊</div>
+        <p>添加兴趣班后这里会显示课时统计</p>
+      </div>`;
+    return;
+  }
+
+  wrap.innerHTML = data.courses.map(c => {
+    const checkins = data.checkins.filter(ci => ci.courseId === c.id);
+    const used = checkins.length;
+    const remain = c.totalHours - used;
+    const pct = Math.min(100, (used / c.totalHours * 100)).toFixed(1);
+    const fillColor = remain <= 4 ? '#f43f5e' : c.color;
+
+    const recent = [...checkins].reverse().slice(0, 10);
+
+    return `
+    <div class="card">
+      <div class="card-header">
+        <h3><span class="color-dot" style="background:${c.color}"></span>${c.icon} ${c.name}</h3>
+        <button class="btn btn-success btn-sm" onclick="quickCheckin('${c.id}');renderHours();">打卡</button>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:28px; font-weight:700; margin-bottom:4px;">
+        <span style="color:${c.color}">${used}<span style="font-size:14px;color:var(--text2);font-weight:400"> / ${c.totalHours} 节</span></span>
+        <span style="color:${remain<=4?'#f43f5e':'var(--text2)'};font-size:16px;align-self:center">剩余 ${remain} 节</span>
+      </div>
+      <div class="progress-bar" style="height:10px;">
+        <div class="progress-fill" style="width:${pct}%;background:${fillColor}"></div>
+      </div>
+      <div class="progress-text"><span>进度 ${pct}%</span><span>${remain<=0?'✅ 已完成':remain<=4?'⚠️ 即将用完':''}</span></div>
+      ${recent.length > 0 ? `
+        <div class="section-title" style="margin-top:14px;">上课记录</div>
+        <div class="checkin-list">
+          ${recent.map(ci => `
+            <div class="checkin-item">
+              <div class="checkin-dot" style="background:${c.color}"></div>
+              <div class="checkin-date">${ci.date} ${ci.time||''}</div>
+              <div class="checkin-del" onclick="undoCheckin('${ci.id}')">撤消</div>
+            </div>
+          `).join('')}
+        </div>
+      ` : '<div style="font-size:13px;color:var(--text2);margin-top:10px;">还没有上课记录</div>'}
+    </div>`;
+  }).join('');
+}
+
+async function undoCheckin(checkinId) {
+  const ok = await showConfirm('撤销确认', '确定撤销这次打卡？');
+  if (!ok) return;
+  const data = loadData();
+  data.checkins = data.checkins.filter(ci => ci.id !== checkinId);
+  saveData(data);
+  renderHours();
+  showToast('已撤销');
+}
+
+// ===== Init =====
+renderCourses();
+</script>
+</body>
+</html>
